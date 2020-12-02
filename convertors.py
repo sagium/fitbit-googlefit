@@ -39,7 +39,7 @@ class Convertor:
 		"""Returns a epoch time stamp (in milliseconds). Useful for converting fitbit timestamps to epoch values.
 
 		timestamp -- date-time stamp as a string "yyyy-mm-dd hh:mm:ss" (24-hour) or any other standard format
-		tzincluded -- is timezone included in the timestamp? Otherwise, timezone passed during convertor construction 
+		tzincluded -- is timezone included in the timestamp? Otherwise, timezone passed during convertor construction
 		will be used.
 		"""
 		dawnOfTime = datetime.datetime(1970, 1, 1, tzinfo=dateutil.tz.tzutc())
@@ -54,7 +54,7 @@ class Convertor:
 		return int(val * (10**6))
 
 	def daterange(self, start_date, end_date, step=1):
-		""" returns a generator that iterates from start_date to end_date. 
+		""" returns a generator that iterates from start_date to end_date.
 
 		step -- number of days to skip between each generated day time stamp.
 		"""
@@ -106,7 +106,7 @@ class Convertor:
 		return dict(
 			dataTypeName='com.google.step_count.delta',
 			startTimeNanos=epoch_time_nanos,
-			endTimeNanos=epoch_time_nanos+110,
+			endTimeNanos=epoch_time_nanos + 59000000000,
 			value=[dict(intVal=data_point['value'])]
 			)
 
@@ -123,7 +123,7 @@ class Convertor:
 		return dict(
 			dataTypeName='com.google.distance.delta',
 			startTimeNanos=epoch_time_nanos,
-			endTimeNanos=epoch_time_nanos+110,
+			endTimeNanos=epoch_time_nanos + 59000000000,
 			value=[dict(fpVal=gfit_distance)]
 			)
 
@@ -139,7 +139,7 @@ class Convertor:
 		return dict(
 			dataTypeName='com.google.heart_rate.bpm',
 			startTimeNanos=epoch_time_nanos,
-			endTimeNanos=epoch_time_nanos+110,
+			endTimeNanos=epoch_time_nanos + 59000000000,
 			value=[dict(fpVal=data_point['value'])]
 			)
 
@@ -151,11 +151,17 @@ class Convertor:
 		"""
 		timestamp = "{} {}".format(date, data_point['time'])
 		epoch_time_nanos = self.nano(self.EpochOfFitbitTimestamp(timestamp))
+		BMR_PER_MINUTE = 1.1448999643325806
+
+		data_point['value'] = data_point['value'] / BMR_PER_MINUTE
+		if data_point['value'] < BMR_PER_MINUTE:
+			data_point['value'] = BMR_PER_MINUTE
+		# print(date, data_point)
 
 		return dict(
 			dataTypeName='com.google.calories.expended',
 			startTimeNanos=epoch_time_nanos,
-			endTimeNanos=epoch_time_nanos+110,
+			endTimeNanos=epoch_time_nanos + 59000000000,
 			value=[dict(fpVal=data_point['value'])]
 			)
 
@@ -172,7 +178,7 @@ class Convertor:
 		return dict(
 			dataTypeName='com.google.weight',
 			startTimeNanos=epoch_time_nanos,
-			endTimeNanos=epoch_time_nanos+110,
+			endTimeNanos=epoch_time_nanos + 59000000000,
 			value=[dict(fpVal=googleWeight)]
 			)
 
@@ -188,7 +194,7 @@ class Convertor:
 		return dict(
 			dataTypeName='com.google.body.fat.percentage',
 			startTimeNanos=epoch_time_nanos,
-			endTimeNanos=epoch_time_nanos+110,
+			endTimeNanos=epoch_time_nanos + 59000000000,
 			value=[dict(fpVal=data_point['fat'])]
 			)
 
@@ -214,13 +220,13 @@ class Convertor:
 		return dict(
 			dataTypeName='com.google.activity.segment',
 			startTimeNanos=epoch_time_nanos,
-			endTimeNanos=epoch_time_nanos+60000000000,
+			endTimeNanos=epoch_time_nanos + 59000000000,
 			value=[dict(intVal=sleepType)]
 			)
 
 
 	def ConvertGFitSleepSession(self, sleep_points, logId):
-		"""Converts a list of Google Fit sleep points to Google fit session 
+		"""Converts a list of Google Fit sleep points to Google fit session
 
 		sleep_points -- Google Fit sleep points
 		"""
@@ -240,7 +246,7 @@ class Convertor:
 			)
 
 	def ConvertFitbitActivityLog(self, activity):
-		"""Converts a single Fitbit activity log to Google fit session 
+		"""Converts a single Fitbit activity log to Google fit session
 
 		activity -- fitbit activity
 		"""
@@ -313,7 +319,7 @@ class Convertor:
 
 	def GetDataSource(self, type='steps'):
 		"""Returns a data source for Google Fit data logging
-		
+
 		type - type of data. Possible options: steps, weight, heart_rate, activity
 		"""
 		# Do NOT change these after the first sync!

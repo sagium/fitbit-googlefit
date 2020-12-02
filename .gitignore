@@ -1,7 +1,7 @@
 # local files
 .DS_Store
 local.ini
-
+.idea 
 # No log files
 *.log
 

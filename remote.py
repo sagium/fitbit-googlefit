@@ -24,13 +24,13 @@ from app import DATE_FORMAT
 
 class Remote:
 	"""Methods for remote api calls and synchronization from Fitbit to Google Fit"""
-	
+
 	FITBIT_API_URL = 'https://api.fitbit.com/1'
 	GFIT_MAX_POINTS_PER_UPDATE = 2000 # Max number of data points that can be sent in a single update request
 
 	def __init__(self, fitbitClient, googleClient, convertor, helper):
 		""" Intialize a remote object.
-		
+
 		fitbitClient -- authenticated fitbit client
 		googleClient -- authenticated google client
 		convertor -- a convertor object for type conversions
@@ -44,7 +44,7 @@ class Remote:
 	########################### Remote data read/write methods ############################
 
 	def ReadFromFitbit(self, api_call, *args, **kwargs):
-		"""Peforms a read request from Fitbit API. The request will be paused if API rate limiting has 
+		"""Peforms a read request from Fitbit API. The request will be paused if API rate limiting has
 		been reached!
 
 		api_call -- api method to call
@@ -263,10 +263,19 @@ class Remote:
 			callurl = '{}/user/-/activities/list.json?afterDate={}&sort=asc&offset=0&limit=20'.format(self.FITBIT_API_URL,start_date)
 		activities_raw = self.ReadFromFitbit(self.fitbitClient.make_request, callurl)
 		activities = activities_raw['activities']
+# 		print(activities)
 
 		startTimeMillis,endTimeMillis = [],[]
 		for activity in activities:
-			# 1. write a fit session about the activity 
+			old_cals = activity['calories']
+			activity['calories'] = activity['calories'] - (1.14 * (activity['originalDuration'] / 60000))
+
+			if activity['calories'] < 0:
+			    activity['calories'] = 0.0
+
+			# print(old_cals, activity['originalDuration'], activity['calories'])
+
+			# 1. write a fit session about the activity
 			google_session = self.convertor.ConvertFitbitActivityLog(activity)
 			self.WriteSessionToGoogleFit(google_session)
 
